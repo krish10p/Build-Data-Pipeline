@@ -1,0 +1,48 @@
+CREATE TABLE dbo.Product_Order (
+    OrderID INT PRIMARY KEY,
+    CustomerID NVARCHAR(50),
+    OrderDate DATETIME,
+    UpdatedDate DATETIME,
+    Amount FLOAT
+);
+
+
+
+
+CREATE TABLE dbo.temp_Product_Order (
+    OrderID INT ,
+    CustomerID NVARCHAR(50),
+    OrderDate DATETIME,
+    UpdatedDate DATETIME,
+    Amount FLOAT
+);
+
+
+select * from  dbo.temp_Product_Order
+
+
+
+CREATE PROCEDURE sp_upsert_orders
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    MERGE dbo.Product_Order AS Target
+    USING dbo.temp_Product_Order AS Source
+    ON Target.OrderID = Source.OrderID
+    WHEN MATCHED AND Source.UpdatedDate > Target.UpdatedDate THEN
+        UPDATE SET
+            Target.CustomerID = Source.CustomerID,
+            Target.OrderDate = Source.OrderDate,
+            Target.UpdatedDate = Source.UpdatedDate,
+            Target.Amount = Source.Amount
+    WHEN NOT MATCHED BY TARGET THEN
+        INSERT (OrderID, CustomerID, OrderDate, UpdatedDate, Amount)
+        VALUES (Source.OrderID, Source.CustomerID, Source.OrderDate, Source.UpdatedDate, Source.Amount);
+END
+
+
+
+
+select * from dbo.temp_Product_Order
+select * from dbo.Product_Order
